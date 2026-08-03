@@ -3846,6 +3846,8 @@
     document.querySelector('nav').classList.remove('nav-mobile-open');
     window.scrollTo({ top: 0, behavior: opts.instant ? 'auto' : 'smooth' });
 
+    rememberPage(id);
+
     // Keep the URL in sync so a refresh (or a shared link) reopens this page
     if (!opts.skipHistory) {
       const hash = '#' + id;
@@ -3862,13 +3864,31 @@
 
   function pageFromHash() {
     const id = (window.location.hash || '').replace(/^#\/?/, '');
-    return VALID_PAGES.indexOf(id) !== -1 ? id : 'home';
+    return VALID_PAGES.indexOf(id) !== -1 ? id : null;
+  }
+
+  // Fallback for hosts that strip the hash or embed the page in an iframe
+  function rememberPage(id) {
+    try { sessionStorage.setItem('nh-page', id); } catch (e) {}
+  }
+
+  function rememberedPage() {
+    try {
+      const id = sessionStorage.getItem('nh-page');
+      return VALID_PAGES.indexOf(id) !== -1 ? id : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function currentPage() {
+    return pageFromHash() || rememberedPage() || 'home';
   }
 
   // Restore the right page on load / refresh, and follow back-forward navigation
-  showPage(pageFromHash(), { skipHistory: true, instant: true });
-  window.addEventListener('popstate', () => showPage(pageFromHash(), { skipHistory: true, instant: true }));
-  window.addEventListener('hashchange', () => showPage(pageFromHash(), { skipHistory: true, instant: true }));
+  showPage(currentPage(), { skipHistory: true, instant: true });
+  window.addEventListener('popstate', () => showPage(currentPage(), { skipHistory: true, instant: true }));
+  window.addEventListener('hashchange', () => showPage(currentPage(), { skipHistory: true, instant: true }));
 
 
   function handleSubmit() {
