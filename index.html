@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+  // Runs before anything paints, so the correct page is shown immediately
+  (function () {
+    var pages = ['home', 'about', 'work', 'testimonials', 'contact'];
+    var id = (window.location.hash || '').replace(/^#\/?/, '');
+    if (pages.indexOf(id) === -1) {
+      try { id = sessionStorage.getItem('nh-page'); } catch (e) { id = null; }
+    }
+    if (pages.indexOf(id) === -1) id = 'home';
+    document.documentElement.setAttribute('data-page', id);
+  })();
+</script>
+<noscript><style>#page-home { display: block !important; }</style></noscript>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Noreen Hosny</title>
@@ -126,6 +139,13 @@
   /* ─── PAGES ─── */
   .page { display: none; padding-top: 68px; min-height: 100vh; }
   .page.active { display: block; }
+
+  /* Shows the right page before JS finishes loading, preventing a flash of the home page */
+  html[data-page="home"] #page-home,
+  html[data-page="about"] #page-about,
+  html[data-page="work"] #page-work,
+  html[data-page="testimonials"] #page-testimonials,
+  html[data-page="contact"] #page-contact { display: block; }
 
   /* ─── HERO ─── */
   .hero {
@@ -3153,7 +3173,7 @@
 </nav>
 
 <!-- ══════════════════ HOME PAGE ══════════════════ -->
-<div class="page active" id="page-home">
+<div class="page" id="page-home">
 
   <!-- Hero -->
   <div class="hero">
@@ -3887,6 +3907,8 @@
 
   // Restore the right page on load / refresh, and follow back-forward navigation
   showPage(currentPage(), { skipHistory: true, instant: true });
+  // The pre-paint attribute has done its job; classes drive navigation from here
+  document.documentElement.removeAttribute('data-page');
   window.addEventListener('popstate', () => showPage(currentPage(), { skipHistory: true, instant: true }));
   window.addEventListener('hashchange', () => showPage(currentPage(), { skipHistory: true, instant: true }));
 
